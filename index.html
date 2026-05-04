@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="global.css">
+  <title>Inicio - Biblioteca Digital</title>
+</head>
+
+<body>
+    <audio id="musica-fondo" loop>
+      <source src="images/musicword-library-312688.mp3" type="audio/mpeg" />
+    </audio>
+
+    <button
+      id="control-audio"
+      class="boton-flotante-audio"
+      onclick="toggleAudio()"
+    >
+      <span id="icono-audio">▶</span>
+    </button>
+
+    <script>
+      function toggleAudio() {
+        const audio = document.getElementById("musica-fondo");
+        const icono = document.getElementById("icono-audio");
+        if (audio.paused) {
+          audio.play();
+          icono.innerText = "⏸"; 
+        } else {
+          audio.pause();
+          icono.innerText = "▶"; 
+        }
+      }
+    </script>
+
+  <header class="hero">
+    <div style="position: absolute; top: 20px; right: 20px; z-index: 1000;">
+        <a href="login.html" class="btn btn--outline" 
+           style="background: white; color: #800020; border: 2px solid #800020; cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 600; text-decoration: none; display: inline-block;">
+            Acceso Personal
+        </a>
+    </div>
+
+    <div class="contenedor-padded seccion-index">
+      <h1 class="titulo-hero">Encuentra tu próximo libro</h1>
+      <form class="buscador" data-search="form">
+        <label class="sr-only" for="busqueda">Buscar libros</label>
+        <input id="busqueda" class="buscador__input" type="search" name="q" placeholder="¿Qué te apetece leer hoy?" autocomplete="off" data-search="input" />
+        <button class="btn btn--primary" type="submit" data-search="submit">Buscar</button>
+      </form>
+    </div>
+  </header>
+
+  <main class="pagina">
+    <hr style="border: 0; height: 1px; background: #e0e0e0; margin: 60px auto; max-width: 80%;">
+
+    <section class="contenedor-padded">
+      <div class="fila-center">
+        <h2 class="titulo-seccion">Catálogo General</h2>
+      </div>
+      <div class="grid-destacados" data-grid="destacados"></div>
+    </section>
+  </main>
+
+  <script src="js/app.js" type="module"></script>
+</body>
+</html>
