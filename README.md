@@ -17,7 +17,7 @@ Aplicación web de gestión de biblioteca. Permite a los usuarios registrarse, b
 
 Antes de instalar el proyecto necesitas tener instalado:
 
-- [XAMPP](https://www.apachefriends.org/es/index.html) (incluye Apache, PHP y MySQL)
+- [WAMPP](https://www.apachefriends.org/es/index.html) (incluye Apache, PHP y MySQL)
 - Un navegador web moderno (Chrome, Firefox, Edge...)
 
 ---
@@ -34,7 +34,7 @@ C:\xampp\htdocs\FinalSimpleFixed\
 
 ### 2. Iniciar los servicios
 
-Abre el **Panel de control de XAMPP** y pulsa **Start** en:
+Abre el **Panel de control de WAMPP** y pulsa **Start** en:
 - **Apache**
 - **MySQL**
 
@@ -48,7 +48,7 @@ Abre el **Panel de control de XAMPP** y pulsa **Start** en:
 
 ### 4. Comprobar la conexión
 
-El archivo `api/conexion.php` ya viene configurado para XAMPP con los valores por defecto:
+El archivo `api/conexion.php` ya viene configurado para WAMPP con los valores por defecto:
 
 ```php
 $host     = 'localhost';
