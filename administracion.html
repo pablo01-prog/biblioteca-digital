@@ -1,0 +1,199 @@
+<!doctype html>
+<!-- administracion.html — Panel del administrador: gestión de libros y usuarios.
+     Requiere rol admin. Carga admin.js y usuarios.js. -->
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="global.css" />
+    <title>Panel de Administración - Biblioteca Digital</title>
+  </head>
+
+  <body>
+    <audio id="musica-fondo" loop>
+      <source src="imagenes/musicword-library-312688.mp3" type="audio/mpeg" />
+    </audio>
+
+    <button id="control-audio" class="boton-flotante-audio" onclick="toggleAudio()">
+      <span id="icono-audio">▶</span>
+    </button>
+
+    <script>
+      function toggleAudio() {
+        const audio = document.getElementById("musica-fondo");
+        const icono = document.getElementById("icono-audio");
+
+        if (audio.paused) {
+          audio.play();
+          icono.innerText = "⏸";
+        } else {
+          audio.pause();
+          icono.innerText = "▶";
+        }
+      }
+    </script>
+
+    <div class="contenedor-panel" data-page="admin">
+      <aside class="barra-lateral">
+        <nav class="nav-lateral-flex">
+          <ul class="lista-nav lista-nav-flex">
+            <li class="lista-nav__item">
+              <button class="lista-nav__link activo" data-target="libros">
+                📚 Gestionar Libros
+              </button>
+            </li>
+            <li class="lista-nav__item">
+              <button class="lista-nav__link" data-target="usuarios">
+                👥 Gestionar Usuarios
+              </button>
+            </li>
+
+            <li class="lista-nav__item nav-item-inferior">
+              <button id="btn-logout" class="btn btn--outline btn-volver-inicio">
+                🚪 Volver al Inicio
+              </button>
+            </li>
+          </ul>
+        </nav>
+      </aside>
+
+      <main class="contenido-principal">
+
+        <section id="seccion-libros">
+          <header class="header-admin">
+            <h2>Panel de Control</h2>
+            <button class="boton boton-principal" data-modal-open="nuevo-libro">
+              + Nuevo Libro
+            </button>
+          </header>
+
+          <section class="stats-grid">
+            <div class="stat-card">
+              <h4>Total Libros</h4>
+              <p id="stat-total" class="stat-card__numero stat-card__numero--total">0</p>
+            </div>
+            <div class="stat-card">
+              <h4>Prestados</h4>
+              <p id="stat-prestados" class="stat-card__numero stat-card__numero--prestados">0</p>
+            </div>
+            <div class="stat-card">
+              <h4>Disponibles</h4>
+              <p id="stat-disponibles" class="stat-card__numero stat-card__numero--disponibles">0</p>
+            </div>
+          </section>
+
+          <div id="lista-admin-libros"></div>
+        </section>
+
+        <section id="seccion-usuarios" hidden>
+          <header class="header-admin">
+            <h2>Gestión de Usuarios</h2>
+            <button class="boton boton-principal" data-modal-open="nuevo-usuario">
+              + Nuevo Usuario
+            </button>
+          </header>
+          <div id="lista-admin-usuarios"></div>
+        </section>
+
+      </main>
+    </div>
+
+    <div class="modal" data-modal="nuevo-libro" hidden>
+      <div class="modal__content">
+        <h3>Añadir Nuevo Libro</h3>
+        <form class="form" data-admin-form="form">
+          <label for="titulo">Título</label>
+          <input type="text" name="titulo" id="titulo" required />
+
+          <label for="autor">Autor</label>
+          <input type="text" name="autor" id="autor" required />
+
+          <label for="estado">Estado inicial</label>
+          <select name="estado" id="estado">
+            <option value="disponible" selected>Disponible</option>
+            <option value="prestado">Prestado</option>
+          </select>
+
+          <label for="imagen-libro">Imagen de portada</label>
+          <input type="file" name="imagen" id="imagen-libro" data-field="imagen" accept="image/*" />
+
+          <div class="preview-imagen" data-preview="wrap" hidden>
+            <p>Vista previa:</p>
+            <img data-preview="img" class="preview-imagen__img" alt="Vista previa de portada" />
+          </div>
+
+          <label for="sinopsis-manual">Sinopsis</label>
+          <textarea
+            id="sinopsis-manual"
+            name="sinopsis"
+            rows="4"
+            class="textarea-redimensionable"
+            placeholder="Escribe una breve sinopsis del libro, o pulsa el botón para obtenerla automáticamente de Google Books..."
+          ></textarea>
+
+          <label for="gb-imagen-url">
+            URL de portada
+            <span class="etiqueta-opcional">(opcional — se rellena automáticamente con Google Books)</span>
+          </label>
+          <input type="url" id="gb-imagen-url" value="" placeholder="https://... o deja vacío" />
+
+          <button type="button" id="btn-google-books" class="boton boton-contorno btn-google-books-ancho">
+            🔍 Obtener portada y sinopsis de Google Books
+          </button>
+
+          <div class="modal__actions">
+            <button class="boton boton-contorno" type="button" data-modal-close="nuevo-libro">
+              Cancelar
+            </button>
+            <button class="boton boton-principal" type="submit">
+              Guardar Libro
+            </button>
+          </div>
+          <p class="mensaje-formulario" data-admin-form="msg"></p>
+        </form>
+      </div>
+    </div>
+
+    <script src="js/admin.js" type="module"></script>
+
+    <div class="modal" data-modal="nuevo-usuario" hidden>
+      <div class="modal__content">
+        <h3 id="modal-usuario-titulo">Añadir Nuevo Usuario</h3>
+        <form class="form" id="form-usuario">
+          <input type="hidden" id="usuario-id" />
+
+          <label for="usuario-email">Email</label>
+          <input type="email" id="usuario-email" required />
+          <small id="error-email" class="campo-error"></small>
+
+          <label for="usuario-password">
+            Contraseña
+            <span id="pass-hint" class="pass-hint">(dejar vacío para no cambiarla)</span>
+          </label>
+          <input type="password" id="usuario-password" />
+          <small id="error-password" class="campo-error"></small>
+
+          <label for="usuario-rol">Rol</label>
+          <select id="usuario-rol" class="select-usuario-rol">
+            <option value="usuario">Usuario</option>
+            <option value="admin">Admin</option>
+          </select>
+
+          <div class="modal__actions">
+            <button class="boton boton-contorno" type="button" data-modal-close="nuevo-usuario">Cancelar</button>
+            <button class="boton boton-principal" type="submit">Guardar</button>
+          </div>
+          <p id="msg-usuario" class="mensaje-usuario"></p>
+        </form>
+      </div>
+    </div>
+
+    <script src="js/usuarios.js" type="module"></script>
+  </body>
+</html>

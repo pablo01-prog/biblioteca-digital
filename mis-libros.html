@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<!-- mis-libros.html — Zona privada del lector: préstamos, notas, reseñas y preferencias.
+     Requiere sesión. El JavaScript prestamos.js controla toda la lógica. -->
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="global.css">
+  <title>Mi Biblioteca — Préstamos</title>
+</head>
+<body>
+
+  <audio id="musica-fondo" loop>
+    <source src="imagenes/musicword-library-312688.mp3" type="audio/mpeg" />
+  </audio>
+  <button id="control-audio" class="boton-flotante-audio" onclick="toggleAudio()">
+    <span id="icono-audio">▶</span>
+  </button>
+  <script>
+    function toggleAudio() {
+      const audio = document.getElementById("musica-fondo");
+      const icono = document.getElementById("icono-audio");
+      if (audio.paused) { audio.play(); icono.innerText = "⏸"; }
+      else { audio.pause(); icono.innerText = "▶"; }
+    }
+  </script>
+
+  <header class="hero-mini">
+    <div class="header-usuario">
+      <div class="header-usuario__marca">
+        <h1>📚 Mis Lecturas</h1>
+        <p class="header-usuario__bienvenida" id="msg-bienvenida"></p>
+      </div>
+      <nav class="header-usuario__nav">
+        <a href="index.html">Inicio</a>
+        <a href="mis-libros.html">Acceso Personal</a>
+        <button id="btn-logout" class="btn btn--outline">Cerrar Sesión</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="contenedor-padded">
+
+    <section id="panel-preferencias">
+      <h2 class="panel-preferencias__titulo">🎯 Mis preferencias de lectura</h2>
+      <p class="panel-preferencias__intro">
+        Cuéntanos qué te gusta leer y ordenaremos el catálogo para ti.
+      </p>
+
+      <div class="panel-preferencias__campos">
+        <div class="panel-preferencias__campo">
+          <label for="pref-genero">Género favorito</label>
+          <input id="pref-genero" type="text" placeholder="Ej: Fantasía, Terror, Novela…" list="lista-generos" autocomplete="off" />
+        </div>
+        <div class="panel-preferencias__campo">
+          <label for="pref-autor">Autor favorito</label>
+          <input id="pref-autor" type="text" placeholder="Ej: Tolkien, García Márquez…" list="lista-autores" autocomplete="off" />
+        </div>
+      </div>
+
+      <datalist id="lista-generos"></datalist>
+      <datalist id="lista-autores"></datalist>
+
+      <p id="msg-preferencias" class="msg-preferencias"></p>
+
+      <button id="btn-guardar-prefs" class="btn btn--primary">Guardar preferencias</button>
+    </section>
+
+    <section>
+      <h2 class="titulo-seccion">Mis Préstamos Actuales</h2>
+      <div id="mis-prestamos" class="grid-destacados"></div>
+    </section>
+
+    <hr class="separador-seccion">
+
+    <section>
+      <h2 class="titulo-seccion">Libros Disponibles</h2>
+      <div id="catalogo-prestamos" class="grid-destacados"></div>
+    </section>
+
+  </main>
+
+  <script src="js/prestamos.js" type="module"></script>
+</body>
+</html>
