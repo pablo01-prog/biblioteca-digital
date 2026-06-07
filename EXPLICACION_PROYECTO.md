@@ -1,7 +1,5 @@
 # Explicación del Proyecto — Biblioteca Digital
 
-Documento preparado para la defensa oral del proyecto en FP DAW (Desarrollo de Aplicaciones Web).
-
 ---
 
 ## 1. ¿Qué es este proyecto?
@@ -51,8 +49,10 @@ BibliotecaDigital/
 │   ├── auth/
 │   │   ├── login.js        → Formulario de login
 │   │   └── registro.js     → Formulario de registro
+|   |
 │   └── objects/
 │       └── Usuario.js      → Validación de email y contraseña
+|       └── Libro.js        → Validación de libro
 │
 ├── imagenes/               → Portadas por defecto y audio de fondo
 └── docs/                   → Documentación y scripts SQL auxiliares
@@ -68,9 +68,9 @@ BibliotecaDigital/
 | **`api/`** | Servidor PHP: recibe peticiones, consulta MySQL y devuelve JSON |
 | **`js/`** | JavaScript del cliente: manipula el DOM y llama a la API con `fetch` |
 | **`js/auth/`** | Scripts solo para login y registro |
-| **`js/objects/`** | Clase `Usuario` para validar formularios |
+| **`js/objects/`** | Clase `Usuario` y clase `Libro` para validar formularios |
 | **`imagenes/`** | Recursos estáticos (portada por defecto, música) |
-| **`docs/`** | Material de apoyo (pruebas, SQL extra) |
+| **`docs/`** | Material de apoyo (pruebas, SQL extra, tambien las insercciones de sinopsis) |
 
 ---
 
@@ -242,77 +242,9 @@ Si encuentra datos, los muestra y los guarda en la BD con `PUT api/libros.php` (
 
 ---
 
-## 10. Preguntas frecuentes en la defensa (y respuestas)
 
-### ¿Por qué no usaste un framework (React, Laravel…)?
 
-Porque el objetivo del proyecto es demostrar que entendemos HTML, CSS, JavaScript y PHP por separado, sin depender de herramientas que ocultan la lógica.
-
-### ¿Cómo funciona el login?
-
-El formulario envía email y contraseña en JSON a `api/login.php`. PHP busca el usuario en MySQL, compara la contraseña con `password_verify()` y, si es correcta, guarda el id, email y rol en `$_SESSION`. El JavaScript redirige según el rol.
-
-### ¿Qué es una sesión PHP?
-
-Es un mecanismo del servidor para recordar quién está logueado entre peticiones. PHP crea un identificador (cookie) y guarda los datos del usuario en el servidor. `api/sesion.php` devuelve esos datos al JavaScript.
-
-### ¿Cómo se presta un libro?
-
-El usuario pulsa "Coger prestado". `prestamos.js` hace `PUT` a `api/libros.php` con `{ id, estado: "prestado" }`. PHP cambia el estado del libro y crea una fila en `historial_prestamos` con la fecha actual.
-
-### ¿Cómo se devuelve?
-
-Igual pero con `estado: "disponible"`. PHP actualiza el libro y pone `fecha_devolucion = NOW()` en el historial.
-
-### ¿Por qué el catálogo es público pero los préstamos no?
-
-`GET api/libros.php` no requiere sesión para que cualquiera pueda ver el catálogo. Los métodos POST, PUT y DELETE comprueban `$_SESSION['logueado']`.
-
-### ¿Qué hace la clase Usuario?
-
-Valida el email (formato correcto) y la contraseña (mínimo 8 caracteres, mayúscula y minúscula) **antes** de enviar al servidor. Devuelve `true` o un mensaje de error.
-
-### ¿Por qué usas fetch() en lugar de formularios clásicos?
-
-Porque así la página no se recarga al enviar datos. El JavaScript recibe JSON, muestra mensajes y redirige solo cuando corresponde.
-
-### ¿Qué es JSON?
-
-Formato de texto para intercambiar datos entre JavaScript y PHP. Ejemplo: `{ "ok": true, "rol": "admin" }`.
-
-### ¿Cómo evitas que un usuario borre libros sin ser admin?
-
-En `api/libros.php`, el método DELETE comprueba `$_SESSION['rol'] === 'admin'`. Si no lo es, devuelve error.
-
-### ¿Las notas son privadas?
-
-Sí. `api/notas.php` solo devuelve y guarda notas del `usuario_id` de la sesión actual. Otros usuarios no las ven.
-
-### ¿Un usuario puede reseñar dos veces el mismo libro?
-
-No. `api/resenas.php` comprueba si ya existe una reseña de ese usuario para ese libro.
-
-### ¿Qué pasa si Google Books no responde?
-
-La aplicación sigue funcionando: muestra la imagen por defecto (`imagenes/portada_libro.png`) y el texto "Sin descripción disponible".
-
-### ¿Por qué hay comentarios en español en el código?
-
-Para que sea fácil de leer y explicar en la defensa oral, siguiendo el enfoque didáctico del proyecto.
-
----
-
-## 11. Cómo ejecutar el proyecto (resumen)
-
-1. Instalar WAMP/XAMPP con Apache y MySQL activos.
-2. Copiar la carpeta en `www/BibliotecaDigital`.
-3. Importar `biblioteca.sql` en phpMyAdmin.
-4. Abrir `http://localhost/BibliotecaDigital/index.html`.
-5. Usuario de prueba: consultar `docs/prueba_usuario.sql` o crear uno desde registro.
-
----
-
-## 12. Diagrama de comunicación
+## 10. Diagrama de comunicación
 
 ```
 ┌─────────────┐     fetch (JSON)      ┌─────────────┐     SQL      ┌──────────┐
@@ -329,18 +261,4 @@ Para que sea fácil de leer y explicar en la defensa oral, siguiendo el enfoque 
 
 ---
 
-## 13. Cambios realizados en la simplificación
 
-Sin alterar funcionalidad ni diseño:
-
-- Separación CSS/JS: los mensajes usan `data-estado` (definido en `global.css`), no estilos en JavaScript.
-- Restaurados `Libro.js` e `infoLibros.js` con la clase y las instancias de ejemplo.
-- Divididas funciones largas en pasos con nombres claros (`crearTarjetaLibro`, `cargarPortadaYSinopsis`…).
-- Renombrados métodos confusos (`validarNombreUser` → `validarEmail`).
-- Sustituidos bucles artificiales por `slice()` en la paginación.
-- Añadidos comentarios en español en todos los archivos del proyecto.
-- Corregido `auth_check.php` (archivo opcional, no usado actualmente).
-
----
-
-*Documento generado para apoyo en la presentación y defensa del proyecto Biblioteca Digital.*
