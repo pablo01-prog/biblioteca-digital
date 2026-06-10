@@ -1,12 +1,5 @@
-/* =============================================================================
-   global.css — Estilos de toda la aplicación Biblioteca Digital
-   
-   Incluye: colores, tipografía, login, catálogo, tarjetas flip, panel admin,
-   préstamos, modales, reseñas y mensajes de error/éxito.
-   ============================================================================= */
-
 /* =========================================================
-   1) Variables de color y diseño
+   1) Variables
    ========================================================= */
 :root {
   --color-borgona: #8C2B32;
@@ -287,6 +280,19 @@ small {
 
 .btn--outline:hover {
   background: rgba(140, 43, 50, 0.08);
+}
+
+/* Variante para botones sobre fondos oscuros (cabecera del hero) */
+.btn--outline-light {
+  background: rgba(255, 255, 255, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  color: white;
+  backdrop-filter: blur(4px);
+}
+
+.btn--outline-light:hover {
+  background: rgba(255, 255, 255, 0.28);
+  border-color: white;
 }
 
 .btn--ghost {
@@ -1149,12 +1155,14 @@ small {
 .modal__content {
   position: relative;
   width: min(560px, calc(100% - 32px));
-  margin: 80px auto;
+  margin: 40px auto;
   border-radius: var(--radio-muy-grande);
   background: rgba(255, 255, 255, 0.92);
   box-shadow: 0 22px 70px rgba(0, 0, 0, 0.20);
   border: 1px solid rgba(0, 0, 0, 0.06);
   padding: 26px 26px 22px;
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
 }
 
 .modal__header {
@@ -1767,207 +1775,58 @@ small {
   font-style: italic;
 }
 
-/* =============================================================================
-   Estados visuales con data-estado (el JS no define colores, solo el atributo)
-   ============================================================================= */
+/* login.js / registro.js — mensajes de estado del formulario de auth */
+.auth-mensaje--ok    { color: green; }
+.auth-mensaje--error { color: red; }
+.auth-mensaje--info  { color: blue; }
 
-.auth-mensaje[data-estado="ok"]    { color: green; }
-.auth-mensaje[data-estado="error"] { color: red; }
-.auth-mensaje[data-estado="info"]  { color: blue; }
-
-.campo-error[data-estado="error"] {
-  color: var(--color-borgona);
-  display: block;
-  margin-top: -14px;
-  margin-bottom: 10px;
-}
-
-.mensaje-formulario[data-estado="ok"]    { color: green; text-align: center; margin-top: 10px; }
-.mensaje-formulario[data-estado="error"] { color: red; text-align: center; margin-top: 10px; }
-.mensaje-formulario[data-estado="warn"]  { color: orange; text-align: center; margin-top: 10px; }
-
-.mensaje-usuario[data-estado="ok"]       { color: green; text-align: center; margin-top: 10px; min-height: 1.2em; }
-.mensaje-usuario[data-estado="error"]    { color: red; text-align: center; margin-top: 10px; min-height: 1.2em; }
-.mensaje-usuario[data-estado="cargando"] { color: blue; text-align: center; margin-top: 10px; min-height: 1.2em; }
-
-.msg-preferencias {
-  font-size: 0.85rem;
-  margin: 4px 0 8px;
-}
-
-.msg-preferencias[data-estado="ok"]   { color: green; }
-.msg-preferencias[data-estado="info"] { color: var(--color-borgona); }
-
-.msg-resena[data-estado="ok"]    { color: green; }
-.msg-resena[data-estado="error"] { color: red; }
-.msg-resena[data-estado="warn"]  { color: orange; }
-
-.btn-estrella[data-activa="si"] { opacity: 1; }
-
-.paginacion .btn-pagina {
-  background: transparent;
-  color: var(--color-borgona);
-  border: 2px solid var(--color-borgona);
-}
-
-.paginacion .btn-pagina[data-activa="si"] {
-  background: var(--color-borgona);
-  color: white;
-}
-
-/* =============================================================================
-   Clases de las páginas HTML (sin estilos inline)
-   ============================================================================= */
-
-.hero-nav {
-  position: absolute;
-  top: 20px;
-  right: 24px;
-  z-index: 100;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.btn-nav-hero {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.4);
-  color: white;
-}
-
-.hero-subtitulo {
-  color: rgba(255, 255, 255, 0.7);
-  margin-bottom: 8px;
-}
-
-.btn-buscar-filtros {
-  height: 44px;
-  white-space: nowrap;
-}
-
-.separador-catalogo {
-  border: 0;
-  height: 1px;
-  background: #e5e0d8;
-  margin: 0 auto 48px;
-  max-width: 80%;
-}
-
-.seccion-catalogo {
-  padding-top: 0;
-}
-
-.btn-cerrar-modal {
-  padding: 6px 16px;
-  font-size: 0.9rem;
-}
-
-.modal-resenas-lista {
-  max-height: 60vh;
-  overflow-y: auto;
-}
-
-.panel-preferencias__titulo {
-  font-size: 1.4rem;
-  margin-bottom: 6px;
-}
-
-.panel-preferencias__intro {
-  color: var(--color-gris-claro);
-  font-size: 0.9rem;
+/* ── Textarea de sinopsis en el modal de nuevo libro ─────── */
+.sinopsis-wrap {
+  position: relative;
   margin-bottom: 18px;
 }
 
-.panel-preferencias__campos {
-  display: flex;
-  gap: 14px;
-  flex-wrap: wrap;
-  margin-bottom: 14px;
-}
-
-.panel-preferencias__campo {
-  flex: 1;
-  min-width: 180px;
-}
-
-.separador-seccion {
-  margin: 48px 0;
-  border: 0;
-  border-top: 1px solid var(--color-borde);
-}
-
-.nav-lateral-flex {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.lista-nav-flex {
-  flex-grow: 1;
-}
-
-.nav-item-inferior {
-  margin-top: auto;
-  padding-bottom: 20px;
-}
-
-.btn-volver-inicio {
+.sinopsis-textarea {
   width: 100%;
-  color: var(--color-borgona);
-  border-color: var(--color-borgona);
-}
-
-.stat-card__numero {
-  font-size: 2rem;
-  font-weight: bold;
-}
-
-.stat-card__numero--total {
-  color: var(--color-borgona);
-}
-
-.stat-card__numero--prestados {
-  color: var(--color-oliva);
-}
-
-.stat-card__numero--disponibles {
-  color: #666;
-}
-
-.preview-imagen__img {
-  max-width: 100px;
-  border-radius: 10px;
-}
-
-.textarea-redimensionable {
-  resize: vertical;
-}
-
-.etiqueta-opcional {
-  color: gray;
-  font-size: 0.8rem;
-}
-
-.btn-google-books-ancho {
-  width: 100%;
-  margin-bottom: 10px;
-}
-
-.pass-hint {
-  font-size: 0.8rem;
-  color: var(--color-gris-claro);
-}
-
-.select-usuario-rol {
-  padding: 10px 18px;
+  padding: 14px 18px;
   border: 1px solid var(--color-borde);
-  border-radius: 9999px;
-  width: 100%;
-  margin-bottom: 18px;
+  border-radius: 16px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: var(--color-gris);
   background: white;
+  resize: vertical;
+  min-height: 120px;
+  line-height: 1.6;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
 }
 
-.texto-muted--espaciado {
-  margin-top: 16px;
-  font-size: 1.05rem;
+.sinopsis-textarea:focus {
+  outline: none;
+  border-color: var(--color-borgona);
+  box-shadow: 0 0 0 3px rgba(123, 29, 29, 0.12);
+}
+
+.sinopsis-textarea::placeholder {
+  color: #bbb;
+  font-style: italic;
+}
+
+/* Contador de caracteres abajo a la derecha */
+.sinopsis-contador {
+  position: absolute;
+  bottom: 10px;
+  right: 14px;
+  font-size: 0.75rem;
+  color: #bbb;
+  pointer-events: none;
+}
+
+/* Etiqueta "(opcional)" al lado del label */
+.label-opcional {
+  font-size: 0.8rem;
+  color: var(--color-gris-claro);
+  font-weight: 400;
+  margin-left: 6px;
 }

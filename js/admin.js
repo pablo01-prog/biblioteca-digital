@@ -1,14 +1,10 @@
-// =============================================================================
-// admin.js — Panel de administración (administracion.html)
-//
-// El administrador puede ver estadísticas, añadir libros, eliminarlos y buscar
-// portadas en Google Books. La gestión de usuarios está en usuarios.js.
-// =============================================================================
+// admin.js
+// Controla el panel de administración (administracion.html)
+// Desde aquí el admin puede ver estadísticas, añadir libros, eliminarlos y gestionar usuarios
 
 import { Libro } from "./objects/Libro.js";
-import { ponerEstado } from "./poner-estado.js";
 
-// Comprueba que hay sesión de administrador; si no, redirige
+// Antes de hacer nada compruebo que el usuario es admin
 // Si no lo es, lo mando al login o al inicio según el caso
 async function comprobarSesion() {
     let respuesta = await fetch('api/sesion.php');
@@ -114,7 +110,8 @@ async function buscarEnGoogleBooks() {
     let msg    = document.querySelector('[data-admin-form="msg"]');
 
     if (titulo == '') {
-        ponerEstado(msg, 'Escribe el título primero.', 'warn');
+        msg.textContent = 'Escribe el título primero.';
+        msg.className = 'msg-warn';
         return;
     }
 
@@ -154,9 +151,11 @@ async function buscarEnGoogleBooks() {
             previewWrap.hidden = false;
         }
 
-        ponerEstado(msg, '✅ Portada cargada desde Google Books.', 'ok');
+        msg.textContent = '✅ Portada cargada desde Google Books.';
+        msg.className = 'msg-ok';
     } else {
-        ponerEstado(msg, '⚠️ No se encontró el libro. Puedes añadirlo sin portada o pegar la URL manualmente.', 'warn');
+        msg.textContent = '⚠️ No se encontró el libro. Puedes añadirlo sin portada o pegar la URL manualmente.';
+        msg.className = 'msg-warn';
     }
 }
 
@@ -172,7 +171,8 @@ async function guardarLibro(evento) {
     let msg         = document.querySelector('[data-admin-form="msg"]');
 
     if (titulo == '' || autor == '') {
-        ponerEstado(msg, 'Título y autor son obligatorios.', 'error');
+        msg.textContent = 'Título y autor son obligatorios.';
+        msg.className = 'msg-error';
         return;
     }
 
@@ -191,7 +191,8 @@ async function guardarLibro(evento) {
     let resultado = await respuesta.json();
 
     if (resultado.ok) {
-        ponerEstado(msg, '✅ Libro añadido correctamente.', 'ok');
+        msg.textContent = '✅ Libro añadido correctamente.';
+        msg.className = 'msg-ok';
 
         // Espero un momento para que el admin vea el mensaje y luego cierro el modal
         setTimeout(function() {
@@ -203,7 +204,8 @@ async function guardarLibro(evento) {
             cargarLibros();
         }, 800);
     } else {
-        ponerEstado(msg, '❌ Error: ' + resultado.error, 'error');
+        msg.textContent = '❌ Error: ' + resultado.error;
+        msg.className = 'msg-error';
     }
 }
 
@@ -222,6 +224,15 @@ async function iniciar() {
     });
 
     document.getElementById('btn-google-books').addEventListener('click', buscarEnGoogleBooks);
+
+    // Contador de caracteres del textarea de sinopsis
+    const textareaSinopsis = document.getElementById('sinopsis-manual');
+    const contadorSinopsis = document.getElementById('sinopsis-count');
+    if (textareaSinopsis && contadorSinopsis) {
+        textareaSinopsis.addEventListener('input', function() {
+            contadorSinopsis.textContent = textareaSinopsis.value.length;
+        });
+    }
 
     document.querySelector('[data-admin-form="form"]').addEventListener('submit', guardarLibro);
 
