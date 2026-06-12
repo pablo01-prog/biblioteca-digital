@@ -4,6 +4,9 @@
 
 import { Libro } from "./objects/Libro.js";
 
+// 🔒 Cache global para evitar llamadas repetidas a Google Books
+const cachePortadas = {};
+
 // Antes de hacer nada compruebo que el usuario es admin
 // Si no lo es, lo mando al login o al inicio según el caso
 async function comprobarSesion() {
@@ -62,9 +65,9 @@ async function cargarLibros() {
         info.className = 'fila-admin-libro__info';
         info.innerHTML = miniatura +
             '<div>' +
-                '<strong>' + libro.titulo + '</strong>' +
-                '<span class="fila-admin-libro__autor">— ' + libro.autor + '</span>' +
-                '<span class="badge badge--admin">' + libro.estado + '</span>' +
+            '<strong>' + libro.titulo + '</strong>' +
+            '<span class="fila-admin-libro__autor">— ' + libro.autor + '</span>' +
+            '<span class="badge badge--admin">' + libro.estado + '</span>' +
             '</div>';
 
         let btnEliminar = document.createElement('button');
@@ -74,7 +77,7 @@ async function cargarLibros() {
 
         // Guardo el id en una variable para que el closure lo capture bien
         let idLibro = libro.id;
-        btnEliminar.addEventListener('click', function() {
+        btnEliminar.addEventListener('click', function () {
             eliminarLibro(idLibro);
         });
 
@@ -104,10 +107,15 @@ async function eliminarLibro(id) {
 }
 
 // Busca en Google Books la portada y sinopsis del libro que está escribiendo el admin
-async function buscarEnGoogleBooks() {
-    let titulo = document.getElementById('titulo').value;
-    let autor  = document.getElementById('autor').value;
+// 🎯 Mejorado con: cache de portadas, control de errores 429, mejor manejo de red
+async function buscarEnGoogleBooks(evento) {
+    // Evitamos cualquier comportamiento extraño si el botón está dentro de un formulario
+    if (evento) evento.preventDefault();
+
+    let titulo = document.getElementById('titulo').value.trim();
+    let autor  = document.getElementById('autor').value.trim();
     let msg    = document.querySelector('[data-admin-form="msg"]');
+    let boton  = document.getElementById('btn-google-books');
 
     if (titulo == '') {
         msg.textContent = 'Escribe el título primero.';
@@ -115,46 +123,131 @@ async function buscarEnGoogleBooks() {
         return;
     }
 
-    let query = encodeURIComponent(titulo + ' ' + autor);
-    let url   = 'https://www.googleapis.com/books/v1/volumes?q=' + query + '&maxResults=1&langRestrict=es';
-
-    let respuesta = await fetch(url);
-    let datos     = await respuesta.json();
-
-    if (datos.totalItems > 0) {
-        let info = datos.items[0].volumeInfo;
-
-        let portada = '';
-        if (info.imageLinks) {
-            portada = info.imageLinks.thumbnail.replace('http://', 'https://');
+    try {
+        // 🔒 Deshabilitamos el botón para evitar clics repetidos
+        if (boton) {
+            boton.disabled = true;
+            boton.textContent = '🔍 Buscando...';
         }
 
-        let descripcion = '';
-        if (info.description) {
-            descripcion = info.description.substring(0, 500);
+        msg.textContent = '🔍 Conectando con Google Books...';
+        msg.className = 'msg-info';
+
+        // Creamos una clave de cache combinando título + autor
+        let cacheKey = `${titulo}|${autor}`;
+
+        // 💾 Si ya buscamos este libro antes, usamos el cache
+        if (cachePortadas[cacheKey]) {
+            console.log('📦 Usando cache para:', cacheKey);
+            aplicarResultadosGoogle(cachePortadas[cacheKey], msg);
+            if (boton) {
+                boton.disabled = false;
+                boton.textContent = '🔍 Obtener portada y sinopsis de Google Books';
+            }
+            return;
         }
 
-        // Meto la URL de la portada en el campo del formulario
-        document.getElementById('gb-imagen-url').value = portada;
+        // Construimos la query de manera limpia
+        let query = encodeURIComponent(titulo + (autor ? ' ' + autor : ''));
+        
+        // 🛠️ Para producción, añade tu API Key: &key=TU_API_KEY
+        let url = `https://www.googleapis.com/books/v1/volumes?q=${query}&maxResults=1&langRestrict=es`;
 
-        // Solo relleno la sinopsis si el admin no ha escrito nada todavía
-        const textareaSinopsis = document.getElementById('sinopsis-manual');
-        if (textareaSinopsis && textareaSinopsis.value.trim() === '' && descripcion) {
-            textareaSinopsis.value = descripcion;
+        // Timeout de 8 segundos para evitar esperas infinitas
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+        let respuesta = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        
+        // 🔴 Control de error 429 (Rate Limited) y otros errores HTTP
+        if (respuesta.status === 429) {
+            msg.textContent = '⚠️ Límite de Google Books alcanzado. Intenta de nuevo en unos minutos.';
+            msg.className = 'msg-warn';
+            console.warn('Error 429: Rate limit de Google Books');
+            return;
         }
 
-        // Muestro la preview de la portada si la encontré
-        if (portada) {
-            let previewWrap = document.querySelector('[data-preview="wrap"]');
-            let previewImg  = document.querySelector('[data-preview="img"]');
-            previewImg.src  = portada;
-            previewWrap.hidden = false;
+        if (!respuesta.ok) {
+            throw new Error(`Google Books respondió con código ${respuesta.status}`);
         }
 
-        msg.textContent = '✅ Portada cargada desde Google Books.';
-        msg.className = 'msg-ok';
-    } else {
-        msg.textContent = '⚠️ No se encontró el libro. Puedes añadirlo sin portada o pegar la URL manualmente.';
+        let datos = await respuesta.json();
+
+        // Guardamos el resultado en cache
+        cachePortadas[cacheKey] = datos;
+
+        // Aplicamos los resultados
+        aplicarResultadosGoogle(datos, msg);
+
+    } catch (error) {
+        console.error("Error en Google Books:", error);
+        
+        // Diferenciamos el tipo de error para el usuario
+        if (error.name === 'AbortError') {
+            msg.textContent = '⏱️ Timeout: Google Books tardó demasiado. Intenta de nuevo.';
+        } else if (error.message.includes('Failed to fetch')) {
+            msg.textContent = '❌ Sin conexión a internet o Google Books no responde.';
+        } else {
+            msg.textContent = '❌ Error: ' + error.message;
+        }
+        msg.className = 'msg-error';
+    } finally {
+        // 🔓 Siempre reactivamos el botón al terminar
+        if (boton) {
+            boton.disabled = false;
+            boton.textContent = '🔍 Obtener portada y sinopsis de Google Books';
+        }
+    }
+}
+
+// Función auxiliar para aplicar los resultados de Google Books
+function aplicarResultadosGoogle(datos, msg) {
+    try {
+        if (datos.totalItems > 0) {
+            let info = datos.items[0].volumeInfo;
+
+            let portada = '';
+            if (info.imageLinks) {
+                let urlImagen = info.imageLinks.thumbnail || info.imageLinks.smallThumbnail || '';
+                portada = urlImagen.replace('http://', 'https://');
+            }
+
+            let descripcion = info.description ? info.description.substring(0, 500) : '';
+
+            // Rellenamos la URL de portada
+            document.getElementById('gb-imagen-url').value = portada;
+
+            // Solo rellenamos sinopsis si está vacía
+            const textareaSinopsis = document.getElementById('sinopsis-manual');
+            if (textareaSinopsis && textareaSinopsis.value.trim() === '' && descripcion) {
+                textareaSinopsis.value = descripcion;
+                
+                const contadorSinopsis = document.getElementById('sinopsis-count');
+                if (contadorSinopsis) {
+                    contadorSinopsis.textContent = descripcion.length;
+                }
+            }
+
+            // Mostramos la preview de la portada
+            if (portada) {
+                let previewWrap = document.querySelector('[data-preview="wrap"]');
+                let previewImg  = document.querySelector('[data-preview="img"]');
+                if (previewWrap && previewImg) {
+                    previewImg.src = portada;
+                    previewWrap.hidden = false;
+                }
+            }
+
+            msg.textContent = '✅ Portada cargada desde Google Books.';
+            msg.className = 'msg-ok';
+        } else {
+            msg.textContent = '⚠️ No se encontró el libro. Puedes añadirlo sin portada o pegar la URL manualmente.';
+            msg.className = 'msg-warn';
+        }
+    } catch (error) {
+        console.error('Error procesando datos de Google Books:', error);
+        msg.textContent = '⚠️ Error al procesar los datos. Intenta de nuevo.';
         msg.className = 'msg-warn';
     }
 }
@@ -163,12 +256,12 @@ async function buscarEnGoogleBooks() {
 async function guardarLibro(evento) {
     evento.preventDefault();
 
-    let titulo      = document.getElementById('titulo').value;
-    let autor       = document.getElementById('autor').value;
-    let estado      = document.getElementById('estado').value;
-    let imagenUrl   = document.getElementById('gb-imagen-url').value;
+    let titulo = document.getElementById('titulo').value;
+    let autor = document.getElementById('autor').value;
+    let estado = document.getElementById('estado').value;
+    let imagenUrl = document.getElementById('gb-imagen-url').value;
     let descripcion = document.getElementById('sinopsis-manual').value.trim();
-    let msg         = document.querySelector('[data-admin-form="msg"]');
+    let msg = document.querySelector('[data-admin-form="msg"]');
 
     if (titulo == '' || autor == '') {
         msg.textContent = 'Título y autor son obligatorios.';
@@ -180,10 +273,10 @@ async function guardarLibro(evento) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            titulo:      titulo,
-            autor:       autor,
-            estado:      estado,
-            imagen_url:  imagenUrl,
+            titulo: titulo,
+            autor: autor,
+            estado: estado,
+            imagen_url: imagenUrl,
             descripcion: descripcion
         })
     });
@@ -195,10 +288,15 @@ async function guardarLibro(evento) {
         msg.className = 'msg-ok';
 
         // Espero un momento para que el admin vea el mensaje y luego cierro el modal
-        setTimeout(function() {
+        setTimeout(function () {
             document.querySelector('[data-modal="nuevo-libro"]').hidden = true;
             document.querySelector('[data-admin-form="form"]').reset();
             document.getElementById('gb-imagen-url').value = '';
+
+            // Reseteamos el contador de la sinopsis a 0
+            const contadorSinopsis = document.getElementById('sinopsis-count');
+            if (contadorSinopsis) contadorSinopsis.textContent = '0';
+
             const wrap = document.querySelector('[data-preview="wrap"]');
             if (wrap) wrap.hidden = true;
             cargarLibros();
@@ -215,12 +313,12 @@ async function iniciar() {
     if (!sesionOk) return;
 
     // Abrir y cerrar el modal de nuevo libro
-    document.querySelector('[data-modal-open="nuevo-libro"]').addEventListener('click', function() {
-        document.querySelector('[data-modal="nuevo-libro"]').hidden = false;
+    document.querySelector('[data-modal-open="nuevo-libro"]').addEventListener('click', function () {
+        document.querySelector('[data-modal=\"nuevo-libro\"]').hidden = false;
     });
 
-    document.querySelector('[data-modal-close="nuevo-libro"]').addEventListener('click', function() {
-        document.querySelector('[data-modal="nuevo-libro"]').hidden = true;
+    document.querySelector('[data-modal-close=\"nuevo-libro\"]').addEventListener('click', function () {
+        document.querySelector('[data-modal=\"nuevo-libro\"]').hidden = true;
     });
 
     document.getElementById('btn-google-books').addEventListener('click', buscarEnGoogleBooks);
@@ -229,7 +327,7 @@ async function iniciar() {
     const textareaSinopsis = document.getElementById('sinopsis-manual');
     const contadorSinopsis = document.getElementById('sinopsis-count');
     if (textareaSinopsis && contadorSinopsis) {
-        textareaSinopsis.addEventListener('input', function() {
+        textareaSinopsis.addEventListener('input', function () {
             contadorSinopsis.textContent = textareaSinopsis.value.length;
         });
     }
@@ -237,7 +335,7 @@ async function iniciar() {
     document.querySelector('[data-admin-form="form"]').addEventListener('submit', guardarLibro);
 
     // El botón de volver al inicio lleva a index.html
-    document.getElementById('btn-logout').addEventListener('click', function() {
+    document.getElementById('btn-logout').addEventListener('click', function () {
         window.location.href = 'index.html';
     });
 

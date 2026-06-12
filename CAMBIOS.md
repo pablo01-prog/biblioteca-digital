@@ -86,3 +86,20 @@ Proyecto: Biblioteca Digital
 - Al añadir un libro, el admin puede escribir la sinopsis a mano
 - El botón de Google Books rellena automáticamente la sinopsis solo si el textarea está vacío
 - Al cerrar el modal el formulario se resetea completamente
+
+
+# Listado de cambios realizados tras el feedback (Control de API)
+
+Fecha: Junio 2026  
+Proyecto: Biblioteca Digital  
+
+---
+
+## 10. Panel de Administración — Gestión del Error HTTP 429 y Control de Concurrencia
+
+**Archivos modificados:** `js/admin.js` (o `admin.js` según tu estructura)
+
+- **Mecanismo de control de concurrencia (Candado de UI):** Se ha modificado la función `buscarEnGoogleBooks` para capturar y deshabilitar el botón de búsqueda (`#btn-google-books`) inmediatamente después de hacer clic. Esto impide físicamente que el administrador envíe peticiones asíncronas en ráfaga por impaciencia, eliminando la causa principal del bloqueo por spam.
+- **Arquitectura defensiva de errores con `try/catch`:** Se ha reestructurado el flujo para evaluar explícitamente el estado de la respuesta HTTP (`!respuesta.ok`). En caso de recibir una denegación de servicio de Google (como el error `429 Too Many Requests`), el script captura la excepción real y la muestra de forma dinámica en la interfaz a través del contenedor de mensajes (`msg-error`), evitando alertas genéricas que camuflen el origen del fallo.
+- **Garantía de estado mediante bloque `finally`:** Se ha implementado un bloque crítico de finalización que se ejecuta obligatoriamente tanto si la petición finaliza con éxito como si es rechazada por el servidor o por un corte de red. En este bloque se reactiva el botón de la interfaz de usuario y se restaura su texto original de forma segura.
+- **Saneamiento y optimización de la Query String:** Se ha refinado la construcción de la URL utilizando `encodeURIComponent()` y aplicando una condición limpia para concatenar el nombre del autor. Esto evita el envío de espacios en blanco huérfanos al final de la cadena de consulta que entorpezcan la indexación en los servidores de Google Books.

@@ -1,5 +1,4 @@
 <!doctype html>
-<!-- login.html — Formulario de inicio de sesión. El JavaScript auth/login.js valida y llama a api/login.php -->
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
@@ -38,11 +37,11 @@
           <h1 class="fuente-serie">Biblioteca Digital</h1>
           <div class="stats-login" data-auth="stats">
             <div class="stat-item" data-stat="books">
-              <strong>2.450</strong><br />
+              <strong id="num-libros">...</strong><br />
               <span>Libros</span>
             </div>
             <div class="stat-item" data-stat="authors">
-              <strong>180</strong><br />
+              <strong id="num-autores">...</strong><br />
               <span>Autores</span>
             </div>
           </div>
@@ -88,7 +87,21 @@
       </div>
     </div>
 
-    <!-- Script al final del body para que el DOM esté listo -->
+    <script>
+      document.addEventListener("DOMContentLoaded", async () => {
+        try {
+          const respuesta = await fetch("api/estadisticas.php");
+          if (respuesta.ok) {
+            const datos = await respuesta.json();
+            document.getElementById("num-libros").textContent = datos.total_libros || 0;
+            document.getElementById("num-autores").textContent = datos.total_autores || 0;
+          }
+        } catch (error) {
+          console.error("Error cargando las estadísticas del login:", error);
+        }
+      });
+    </script>
+
     <script src="js/auth/login.js" type="module"></script>
   </body>
 </html>
